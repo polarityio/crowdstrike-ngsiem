@@ -23,10 +23,20 @@ module.exports = {
   logging: { level: 'info' },
   options: [
     {
-      key: 'apiToken',
-      name: 'CrowdStrike API Token',
+      key: 'clientId',
+      name: 'CrowdStrike Client ID',
       description:
-        'CrowdStrike OAuth2 bearer token used to authenticate with the NG-SIEM API.',
+        'CrowdStrike API Client ID used for OAuth2 authentication. Obtain from the Falcon console under API Clients & Keys. Required scopes: NGSIEM:read, NGSIEM:write.',
+      default: '',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'clientSecret',
+      name: 'CrowdStrike Client Secret',
+      description:
+        'CrowdStrike API Client Secret associated with the Client ID above.',
       default: '',
       type: 'password',
       userCanEdit: false,
@@ -85,3 +95,4 @@ module.exports = {
     }
   ]
 };
+

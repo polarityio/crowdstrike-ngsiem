@@ -31,6 +31,32 @@ const createDeepLink = (entity, repositoryValue, queryString, options) => {
     .replace('{{start}}', encodeURIComponent(options.searchWindow || '24hours'));
 };
 
+/**
+ * Formats a timestamp value for display.
+ * Handles:
+ *   - Unix epoch milliseconds as string (e.g. "1773931803588") — confirmed in live API
+ *   - Unix epoch milliseconds as number
+ *   - ISO 8601 strings
+ * Returns "YYYY-MM-DD HH:MM:SS UTC" or the raw value if unparseable.
+ */
+const formatTimestamp = (ts) => {
+  if (!ts) return 'N/A';
+  let ms;
+  if (typeof ts === 'number') {
+    ms = ts;
+  } else if (typeof ts === 'string') {
+    // Unix ms epoch strings are all digits, ~13 chars
+    if (/^\d{10,15}$/.test(ts.trim())) {
+      ms = parseInt(ts, 10);
+    } else {
+      ms = Date.parse(ts);
+    }
+  }
+  if (!ms || isNaN(ms)) return String(ts);
+  const d = new Date(ms);
+  return d.toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC');
+};
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const parseErrorToReadableJSON = (error) =>
@@ -39,4 +65,5 @@ const parseErrorToReadableJSON = (error) =>
     return acc;
   }, {});
 
-module.exports = { createQueryString, createDeepLink, sleep, parseErrorToReadableJSON };
+module.exports = { createQueryString, createDeepLink, formatTimestamp, sleep, parseErrorToReadableJSON };
+

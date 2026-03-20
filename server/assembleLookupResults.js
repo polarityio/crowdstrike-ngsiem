@@ -1,7 +1,7 @@
 'use strict';
 
 const { REPOSITORIES } = require('../constants');
-const { createDeepLink, createQueryString } = require('./dataTransformations');
+const { createDeepLink, createQueryString, formatTimestamp } = require('./dataTransformations');
 
 /**
  * Assembles doLookup results from raw search output.
@@ -33,6 +33,13 @@ const assembleLookupResults = (entities, searchResults, options) =>
     const queryString = createQueryString(entity, options);
     const firstRepo = (repoResults[0] || {}).repositoryValue || 'search-all';
 
+    // Enrich events: format timestamps in-place
+    repoResults.forEach((repo) => {
+      if (repo.events) {
+        repo.events = repo.events.map((event) => enrichEvent(event));
+      }
+    });
+
     return {
       entity,
       data: {
@@ -47,6 +54,20 @@ const assembleLookupResults = (entities, searchResults, options) =>
       }
     };
   });
+
+/**
+ * Enriches a raw NG-SIEM event object:
+ * - Adds __formattedTimestamp for display
+ * - Adds __eventSimpleName convenience field
+ * All __ fields are filtered from the Fields tab in the UI.
+ */
+const enrichEvent = (event) => {
+  const enriched = { ...event };
+  const ts = event['@timestamp'] || event.timestamp || event.UTCTimestamp;
+  if (ts) enriched.__formattedTimestamp = formatTimestamp(ts);
+  if (event['#event_simpleName']) enriched.__eventSimpleName = event['#event_simpleName'];
+  return enriched;
+};
 
 const buildSummaryTags = (repoResults, hasPending) => {
   const totalEvents = repoResults.reduce(
@@ -67,3 +88,4 @@ const parseDefaultRepos = (raw) =>
     .filter(Boolean);
 
 module.exports = { assembleLookupResults };
+

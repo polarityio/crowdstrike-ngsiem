@@ -36,6 +36,7 @@ polarity.export = PolarityComponent.extend({
     }
     this._initEventTabs(this.get('repoResults') || []);
     this._buildReadableJson(this.get('repoResults') || []);
+    this._buildDisplayFields(this.get('repoResults') || []);
   },
 
   _initEventTabs(repoResults) {
@@ -48,12 +49,51 @@ polarity.export = PolarityComponent.extend({
     });
   },
 
+  // Priority fields shown first in the Fields tab, with friendly labels
+  _PRIORITY_KEYS: [
+    { key: '__formattedTimestamp', label: 'Timestamp' },
+    { key: '#event_simpleName', label: 'Event Type' },
+    { key: 'ComputerName', label: 'ComputerName' },
+    { key: 'LocalAddressIP4', label: 'Local IP' },
+    { key: 'aip', label: 'External IP' },
+    { key: 'aid', label: 'Agent ID' },
+    { key: 'event_platform', label: 'Platform' }
+  ],
+
+  _buildDisplayFields(repoResults) {
+    const priorityKeys = this._PRIORITY_KEYS;
+    const priorityKeySet = new Set(priorityKeys.map((p) => p.key));
+
+    (repoResults || []).forEach((repo) => {
+      (repo.events || []).forEach((event) => {
+        const fields = [];
+
+        // Priority fields first
+        priorityKeys.forEach(({ key, label }) => {
+          if (event[key] !== undefined && event[key] !== null && event[key] !== '') {
+            fields.push({ key: label, value: String(event[key]) });
+          }
+        });
+
+        // Remaining non-__ fields, skipping @timestamp (shown via __formattedTimestamp)
+        const skipKeys = new Set([...priorityKeySet, '@timestamp', 'timestamp', 'UTCTimestamp', '#event_simpleName']);
+        Object.keys(event).forEach((k) => {
+          if (!k.startsWith('__') && !skipKeys.has(k)) {
+            fields.push({ key: k, value: String(event[k]) });
+          }
+        });
+
+        Ember.set(event, '__displayFields', fields);
+      });
+    });
+  },
+
   _buildReadableJson(repoResults) {
     (repoResults || []).forEach((repo) => {
       (repo.events || []).forEach((event) => {
         const clean = {};
         Object.keys(event).forEach((k) => {
-          if (k !== '__activeTab' && k !== '__jsonHighlighted') {
+          if (!k.startsWith('__')) {
             clean[k] = event[k];
           }
         });

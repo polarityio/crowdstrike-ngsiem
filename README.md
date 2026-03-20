@@ -35,12 +35,25 @@ Analysts highlight any entity in Polarity (IP, domain, hash, hostname, CVE, etc.
 
 | Option | Type | Required | Default |
 |--------|------|----------|---------|
-| CrowdStrike API Token | Password | ✅ | — |
+| CrowdStrike Client ID | Text (admin) | ✅ | — |
+| CrowdStrike Client Secret | Password (admin) | ✅ | — |
 | Base URL | Text | ✅ | `https://api.crowdstrike.com` |
 | Default Repositories | Text | ✅ | `search-all` |
 | Query Template | Text | ✅ | `search "{{entity}}" \| head(10)` |
 | Search Window | Text | ✅ | `24hours` |
 | Deep Link URL Template | Text | — | See below |
+
+### Obtaining CrowdStrike API Credentials
+
+1. Log into the **Falcon console**
+2. Navigate to **Support & Resources → API Clients & Keys**
+3. Click **Add new API client**
+4. Assign the following scopes:
+   - **Next-Gen SIEM: Read** (`NGSIEM:read`)
+   - **Next-Gen SIEM: Write** (`NGSIEM:write`)
+5. Copy the **Client ID** and **Client Secret** — the secret is only shown once
+
+The integration automatically handles OAuth2 token acquisition and caches tokens until 5 minutes before expiry (tokens are valid for ~30 minutes).
 
 ### Query Template Tokens
 - `{{entity}}` — the highlighted value (automatically quoted and escaped)

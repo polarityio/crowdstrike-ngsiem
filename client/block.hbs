@@ -153,14 +153,12 @@
               {{! Fields tab }}
               {{#if (eq event.__activeTab "fields")}}
                 <div class="csng-fields-body">
-                  {{#each-in event as |key value|}}
-                    {{#if (and (not (eq key "__activeTab")) (not (eq key "__jsonHighlighted")))}}
-                      <div>
-                        <span class="p-key">{{key}}:</span>
-                        <span class="p-value csng-field-value">{{value}}</span>
-                      </div>
-                    {{/if}}
-                  {{/each-in}}
+                  {{#each event.__displayFields as |field|}}
+                    <div>
+                      <span class="p-key">{{field.key}}:</span>
+                      <span class="p-value csng-field-value">{{field.value}}</span>
+                    </div>
+                  {{/each}}
                 </div>
               {{/if}}
 
