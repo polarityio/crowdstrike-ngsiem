@@ -1,0 +1,44 @@
+{
+  "root": {
+    "path": "",
+    "on_null": "return_empty"
+  },
+  "pipeline": [
+    { "op": "copy", "from": "query",        "to": "reduced_results.query" },
+    { "op": "copy", "from": "searchWindow", "to": "reduced_results.search_window" },
+    {
+      "op": "copy",
+      "from": "repoResults[].label",
+      "to": "reduced_results.repositories_searched"
+    },
+    {
+      "op": "copy",
+      "from": "repoResults[].events[].@timestamp",
+      "to": "reduced_results.event_timestamps"
+    },
+    {
+      "op": "copy",
+      "from": "repoResults[].events[].UserName",
+      "to": "reduced_results.usernames"
+    },
+    {
+      "op": "copy",
+      "from": "repoResults[].events[].aid",
+      "to": "reduced_results.agent_ids"
+    },
+    {
+      "op": "copy",
+      "from": "repoResults[].events[].ComputerName",
+      "to": "reduced_results.hostnames"
+    },
+    {
+      "op": "copy",
+      "from": "repoResults[].events.length",
+      "to": "reduced_results.event_counts"
+    },
+    { "op": "prune", "strategy": "empty_values", "target": "reduced_results" }
+  ],
+  "output": {
+    "result": "$working.reduced_results"
+  }
+}

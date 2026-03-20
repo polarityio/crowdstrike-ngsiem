@@ -1,0 +1,14 @@
+{
+  "name": "crowdstrike-ngsiem",
+  "version": "1.0.0",
+  "description": "CrowdStrike Next-Gen SIEM integration for Polarity",
+  "main": "integration.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "async": "^3.2.4",
+    "lodash": "^4.17.21",
+    "polarity-integration-utils": "^3.1.7"
+  }
+}
