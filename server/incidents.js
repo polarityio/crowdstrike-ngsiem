@@ -1,21 +1,13 @@
 'use strict';
 
-const { falconRequest } = require('./falconRequest');
-const {
-  logging: { getLogger }
-} = require('polarity-integration-utils');
+const postmanRequest = require('postman-request');
+const { getAccessToken } = require('./auth');
+const { getLogger } = require('polarity-integration-utils').logging;
 
 /**
  * Adds a description annotation to an existing CrowdStrike Falcon Incident.
  *
  * Required API scope: Incidents: Write
- *
- * CrowdStrike uses an action_parameters pattern to update incidents.
- * Supported action names include:
- *   update_description  — set/update the incident description
- *   add_tag             — add a tag
- *   update_status       — set status (20=New, 25=Reopened, 30=In Progress, 40=Closed)
- *   update_assigned_to_uuid — reassign
  *
  * @param {string} incidentId - Falcon incident ID (e.g. "inc:abc123...")
  * @param {string} comment    - Text to write into the incident description
@@ -24,34 +16,53 @@ const {
  */
 const annotateIncident = async (incidentId, comment, options) => {
   const Logger = getLogger();
+  const baseUrl = (options.baseUrl || 'https://api.crowdstrike.com').replace(/\/$/, '');
+  const token = await getAccessToken(options);
+  const url = `${baseUrl}/incidents/entities/incidents/v1`;
 
-  falconRequest.userOptions = options;
+  Logger.debug({ url, incidentId }, 'annotateIncident: sending request');
 
-  const response = await falconRequest.run({
-    method: 'POST',
-    route: '/incidents/v1/incidents/entities/incidents/v1',
-    body: {
-      action_parameters: [
-        { name: 'update_description', value: comment }
-      ],
-      ids: [incidentId]
-    }
+  return new Promise((resolve, reject) => {
+    postmanRequest.post(
+      {
+        url,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({
+          action_parameters: [
+            { name: 'update_description', value: comment }
+          ],
+          ids: [incidentId]
+        })
+      },
+      (err, res, rawBody) => {
+        if (err) {
+          return reject(new Error(`annotateIncident network error: ${err.message}`));
+        }
+
+        let body;
+        try {
+          body = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody;
+        } catch (_) {
+          body = rawBody;
+        }
+
+        Logger.debug({ statusCode: res.statusCode, body }, 'annotateIncident response');
+
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          const errMsg =
+            (body && body.errors && body.errors[0] && body.errors[0].message) ||
+            JSON.stringify(body);
+          return reject(new Error(`Incident annotation failed (HTTP ${res.statusCode}): ${errMsg}`));
+        }
+
+        resolve({ success: true, incidentId });
+      }
+    );
   });
-
-  Logger.debug(
-    { statusCode: response.statusCode, body: response.body },
-    'annotateIncident response'
-  );
-
-  const ok = response.statusCode >= 200 && response.statusCode < 300;
-  if (!ok) {
-    const errMsg =
-      (response.body && response.body.errors && response.body.errors[0] && response.body.errors[0].message) ||
-      JSON.stringify(response.body);
-    throw new Error(`Incident annotation failed (HTTP ${response.statusCode}): ${errMsg}`);
-  }
-
-  return { success: true, incidentId };
 };
 
 module.exports = { annotateIncident };
