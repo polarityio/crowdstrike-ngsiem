@@ -56,8 +56,8 @@ module.exports = {
       key: 'defaultRepositories',
       name: 'Default Repositories',
       description:
-        'Comma-separated list of NG-SIEM repositories to search by default. Valid values: search-all, investigate_view, third-party, falcon_for_it_view, forensics_view. Default: search-all',
-      default: 'search-all',
+        'Comma-separated list of NG-SIEM repositories to search by default. Valid values: search-all, investigate_view, third-party, falcon_for_it_view, forensics_view. Default: search-all,investigate_view',
+      default: 'search-all,investigate_view',
       type: 'text',
       userCanEdit: false,
       adminOnly: true
@@ -66,8 +66,8 @@ module.exports = {
       key: 'searchQuery',
       name: 'Query Template',
       description:
-        'CQL query template. Use {{entity}} as a placeholder for the highlighted value. Default: search "{{entity}}" | head(10)',
-      default: 'search "{{entity}}" | head(10)',
+        'CQL query template. Use {{entity}} as a placeholder for the highlighted value. Default: search "{{entity}}" | head(25)',
+      default: 'search "{{entity}}" | head(25)',
       type: 'text',
       userCanEdit: true,
       adminOnly: false
@@ -76,8 +76,8 @@ module.exports = {
       key: 'searchWindow',
       name: 'Search Window',
       description:
-        'How far back to search for events. Examples: 1hour, 24hours, 7days. Default: 24hours',
-      default: '24hours',
+        'How far back to search for events. Examples: 1hour, 24hours, 7days, 30days. Default: 7days',
+      default: '7days',
       type: 'text',
       userCanEdit: true,
       adminOnly: false
