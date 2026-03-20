@@ -20,11 +20,9 @@ polarity.export = PolarityComponent.extend({
       });
       const entityValue = (this.get('block.entity') || {}).value || '';
       this.set('block._state', {
-        // Search state
         isQuerying: false,
         error: null,
-        repoVisibility,
-        // Create Case form
+        repoVisibility: repoVisibility,
         showCreateCase: false,
         caseTitle: entityValue,
         caseDescription: '',
@@ -32,7 +30,6 @@ polarity.export = PolarityComponent.extend({
         caseLoading: false,
         caseError: null,
         caseSuccess: null,
-        // Annotate Incident form
         showAnnotateIncident: false,
         incidentId: '',
         incidentComment: '',
@@ -46,9 +43,9 @@ polarity.export = PolarityComponent.extend({
     this._buildDisplayFields(this.get('repoResults') || []);
   },
 
-  _initEventTabs(repoResults) {
-    (repoResults || []).forEach((repo) => {
-      (repo.events || []).forEach((event) => {
+  _initEventTabs: function (repoResults) {
+    (repoResults || []).forEach(function (repo) {
+      (repo.events || []).forEach(function (event) {
         if (!event.__activeTab) {
           Ember.set(event, '__activeTab', 'fields');
         }
@@ -66,23 +63,23 @@ polarity.export = PolarityComponent.extend({
     { key: 'event_platform', label: 'Platform' }
   ],
 
-  _buildDisplayFields(repoResults) {
+  _buildDisplayFields: function (repoResults) {
     const priorityKeys = this._PRIORITY_KEYS;
-    const priorityKeySet = new Set(priorityKeys.map((p) => p.key));
+    const priorityKeyNames = priorityKeys.map(function (p) { return p.key; });
 
-    (repoResults || []).forEach((repo) => {
-      (repo.events || []).forEach((event) => {
+    (repoResults || []).forEach(function (repo) {
+      (repo.events || []).forEach(function (event) {
         const fields = [];
 
-        priorityKeys.forEach(({ key, label }) => {
-          if (event[key] !== undefined && event[key] !== null && event[key] !== '') {
-            fields.push({ key: label, value: String(event[key]) });
+        priorityKeys.forEach(function (pk) {
+          if (event[pk.key] !== undefined && event[pk.key] !== null && event[pk.key] !== '') {
+            fields.push({ key: pk.label, value: String(event[pk.key]) });
           }
         });
 
-        const skipKeys = new Set([...priorityKeySet, '@timestamp', 'timestamp', 'UTCTimestamp', '#event_simpleName']);
-        Object.keys(event).forEach((k) => {
-          if (!k.startsWith('__') && !skipKeys.has(k)) {
+        const skipKeys = priorityKeyNames.concat(['@timestamp', 'timestamp', 'UTCTimestamp', '#event_simpleName']);
+        Object.keys(event).forEach(function (k) {
+          if (!k.startsWith('__') && skipKeys.indexOf(k) === -1) {
             fields.push({ key: k, value: String(event[k]) });
           }
         });
@@ -92,19 +89,20 @@ polarity.export = PolarityComponent.extend({
     });
   },
 
-  _buildReadableJson(repoResults) {
-    (repoResults || []).forEach((repo) => {
-      (repo.events || []).forEach((event) => {
+  _buildReadableJson: function (repoResults) {
+    const self = this;
+    (repoResults || []).forEach(function (repo) {
+      (repo.events || []).forEach(function (event) {
         const clean = {};
-        Object.keys(event).forEach((k) => {
+        Object.keys(event).forEach(function (k) {
           if (!k.startsWith('__')) clean[k] = event[k];
         });
-        Ember.set(event, '__jsonHighlighted', this._syntaxHighlight(JSON.stringify(clean, null, 2)));
+        Ember.set(event, '__jsonHighlighted', self._syntaxHighlight(JSON.stringify(clean, null, 2)));
       });
     });
   },
 
-  _syntaxHighlight(json) {
+  _syntaxHighlight: function (json) {
     json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return json.replace(
       /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
@@ -123,13 +121,12 @@ polarity.export = PolarityComponent.extend({
   },
 
   actions: {
-    // ── Search ──────────────────────────────────────────────────────────
-    toggleRepoVisibility(repoValue) {
-      const key = `block._state.repoVisibility.${repoValue}`;
+    toggleRepoVisibility: function (repoValue) {
+      const key = 'block._state.repoVisibility.' + repoValue;
       this.set(key, !this.get(key));
     },
 
-    runQuery() {
+    runQuery: function () {
       this.set('block._state.error', null);
       this.set('block._state.isQuerying', true);
 
@@ -145,7 +142,7 @@ polarity.export = PolarityComponent.extend({
           if (response.query) this.set('block.data.details.query', response.query);
 
           const visibility = this.get('block._state.repoVisibility') || {};
-          (response.repoResults || []).forEach((r) => {
+          (response.repoResults || []).forEach(function (r) {
             if (visibility[r.repositoryValue] === undefined) {
               visibility[r.repositoryValue] = true;
             }
@@ -162,7 +159,7 @@ polarity.export = PolarityComponent.extend({
         });
     },
 
-    changeTab(tabName, repositoryValue, eventIndex) {
+    changeTab: function (tabName, repositoryValue, eventIndex) {
       const results = this.get('repoResults') || [];
       const repo = results.find((r) => r.repositoryValue === repositoryValue);
       if (repo && repo.events && repo.events[eventIndex]) {
@@ -170,10 +167,10 @@ polarity.export = PolarityComponent.extend({
       }
     },
 
-    checkStatus(jobId, repositoryValue) {
+    checkStatus: function (jobId, repositoryValue) {
       this.sendIntegrationMessage({
         action: 'CHECK_STATUS',
-        data: { jobId, repositoryValue }
+        data: { jobId: jobId, repositoryValue: repositoryValue }
       })
         .then((response) => {
           const results = this.get('repoResults') || [];
@@ -192,10 +189,10 @@ polarity.export = PolarityComponent.extend({
         });
     },
 
-    cancelQuery(jobId, repositoryValue) {
+    cancelQuery: function (jobId, repositoryValue) {
       this.sendIntegrationMessage({
         action: 'CANCEL_QUERY',
-        data: { jobId, repositoryValue }
+        data: { jobId: jobId, repositoryValue: repositoryValue }
       })
         .then(() => {
           const results = this.get('repoResults') || [];
@@ -211,16 +208,15 @@ polarity.export = PolarityComponent.extend({
         });
     },
 
-    // ── Create Case ─────────────────────────────────────────────────────
-    toggleCreateCase() {
+    toggleCreateCase: function () {
       this.set('block._state.showCreateCase', !this.get('block._state.showCreateCase'));
     },
 
-    setCaseType(type) {
+    setCaseType: function (type) {
       this.set('block._state.caseType', type);
     },
 
-    resetCase() {
+    resetCase: function () {
       this.set('block._state.caseSuccess', null);
       this.set('block._state.caseError', null);
       const entityValue = (this.get('block.entity') || {}).value || '';
@@ -229,7 +225,7 @@ polarity.export = PolarityComponent.extend({
       this.set('block._state.caseType', 'incident');
     },
 
-    createCase() {
+    createCase: function () {
       const title = (this.get('block._state.caseTitle') || '').trim();
       const description = (this.get('block._state.caseDescription') || '').trim();
       const type = this.get('block._state.caseType') || 'incident';
@@ -246,7 +242,7 @@ polarity.export = PolarityComponent.extend({
       const entity = this.get('block.entity');
       this.sendIntegrationMessage({
         action: 'CREATE_CASE',
-        data: { title, description, type, entityValue: entity.value }
+        data: { title: title, description: description, type: type, entityValue: entity.value }
       })
         .then((response) => {
           this.set('block._state.caseLoading', false);
@@ -258,19 +254,18 @@ polarity.export = PolarityComponent.extend({
         });
     },
 
-    // ── Annotate Incident ────────────────────────────────────────────────
-    toggleAnnotateIncident() {
+    toggleAnnotateIncident: function () {
       this.set('block._state.showAnnotateIncident', !this.get('block._state.showAnnotateIncident'));
     },
 
-    resetIncident() {
+    resetIncident: function () {
       this.set('block._state.incidentSuccess', null);
       this.set('block._state.incidentError', null);
       this.set('block._state.incidentId', '');
       this.set('block._state.incidentComment', '');
     },
 
-    annotateIncident() {
+    annotateIncident: function () {
       const incidentId = (this.get('block._state.incidentId') || '').trim();
       const comment = (this.get('block._state.incidentComment') || '').trim();
 
@@ -285,7 +280,7 @@ polarity.export = PolarityComponent.extend({
 
       this.sendIntegrationMessage({
         action: 'ANNOTATE_INCIDENT',
-        data: { incidentId, comment }
+        data: { incidentId: incidentId, comment: comment }
       })
         .then((response) => {
           this.set('block._state.incidentLoading', false);
