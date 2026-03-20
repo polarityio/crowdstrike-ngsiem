@@ -14,15 +14,31 @@ polarity.export = PolarityComponent.extend({
   init() {
     this._super(...arguments);
     if (!this.get('block._state')) {
-      // Initialize per-repo visibility state — all visible by default
       const repoVisibility = {};
       (this.get('repoResults') || []).forEach((r) => {
         repoVisibility[r.repositoryValue] = true;
       });
+      const entityValue = (this.get('block.entity') || {}).value || '';
       this.set('block._state', {
+        // Search state
         isQuerying: false,
         error: null,
-        repoVisibility
+        repoVisibility,
+        // Create Case form
+        showCreateCase: false,
+        caseTitle: entityValue,
+        caseDescription: '',
+        caseType: 'incident',
+        caseLoading: false,
+        caseError: null,
+        caseSuccess: null,
+        // Annotate Incident form
+        showAnnotateIncident: false,
+        incidentId: '',
+        incidentComment: '',
+        incidentLoading: false,
+        incidentError: null,
+        incidentSuccess: null
       });
     }
     this._initEventTabs(this.get('repoResults') || []);
@@ -40,7 +56,6 @@ polarity.export = PolarityComponent.extend({
     });
   },
 
-  // Priority fields shown first in the Fields tab, with friendly labels
   _PRIORITY_KEYS: [
     { key: '__formattedTimestamp', label: 'Timestamp' },
     { key: '#event_simpleName', label: 'Event Type' },
@@ -59,14 +74,12 @@ polarity.export = PolarityComponent.extend({
       (repo.events || []).forEach((event) => {
         const fields = [];
 
-        // Priority fields first
         priorityKeys.forEach(({ key, label }) => {
           if (event[key] !== undefined && event[key] !== null && event[key] !== '') {
             fields.push({ key: label, value: String(event[key]) });
           }
         });
 
-        // Remaining non-__ fields, skipping @timestamp (shown via __formattedTimestamp)
         const skipKeys = new Set([...priorityKeySet, '@timestamp', 'timestamp', 'UTCTimestamp', '#event_simpleName']);
         Object.keys(event).forEach((k) => {
           if (!k.startsWith('__') && !skipKeys.has(k)) {
@@ -84,9 +97,7 @@ polarity.export = PolarityComponent.extend({
       (repo.events || []).forEach((event) => {
         const clean = {};
         Object.keys(event).forEach((k) => {
-          if (!k.startsWith('__')) {
-            clean[k] = event[k];
-          }
+          if (!k.startsWith('__')) clean[k] = event[k];
         });
         Ember.set(event, '__jsonHighlighted', this._syntaxHighlight(JSON.stringify(clean, null, 2)));
       });
@@ -112,6 +123,7 @@ polarity.export = PolarityComponent.extend({
   },
 
   actions: {
+    // ── Search ──────────────────────────────────────────────────────────
     toggleRepoVisibility(repoValue) {
       const key = `block._state.repoVisibility.${repoValue}`;
       this.set(key, !this.get(key));
@@ -132,7 +144,6 @@ polarity.export = PolarityComponent.extend({
           if (response.deepLink) this.set('block.data.details.deepLink', response.deepLink);
           if (response.query) this.set('block.data.details.query', response.query);
 
-          // Initialize visibility for any new repos returned
           const visibility = this.get('block._state.repoVisibility') || {};
           (response.repoResults || []).forEach((r) => {
             if (visibility[r.repositoryValue] === undefined) {
@@ -198,181 +209,91 @@ polarity.export = PolarityComponent.extend({
         .catch((err) => {
           this.set('block._state.error', (err && err.detail) || 'Cancel failed.');
         });
-    }
-  }
-});
-
-
-  _initEventTabs(repoResults) {
-    (repoResults || []).forEach((repo) => {
-      (repo.events || []).forEach((event) => {
-        if (!event.__activeTab) {
-          Ember.set(event, '__activeTab', 'fields');
-        }
-      });
-    });
-  },
-
-  // Priority fields shown first in the Fields tab, with friendly labels
-  _PRIORITY_KEYS: [
-    { key: '__formattedTimestamp', label: 'Timestamp' },
-    { key: '#event_simpleName', label: 'Event Type' },
-    { key: 'ComputerName', label: 'ComputerName' },
-    { key: 'LocalAddressIP4', label: 'Local IP' },
-    { key: 'aip', label: 'External IP' },
-    { key: 'aid', label: 'Agent ID' },
-    { key: 'event_platform', label: 'Platform' }
-  ],
-
-  _buildDisplayFields(repoResults) {
-    const priorityKeys = this._PRIORITY_KEYS;
-    const priorityKeySet = new Set(priorityKeys.map((p) => p.key));
-
-    (repoResults || []).forEach((repo) => {
-      (repo.events || []).forEach((event) => {
-        const fields = [];
-
-        // Priority fields first
-        priorityKeys.forEach(({ key, label }) => {
-          if (event[key] !== undefined && event[key] !== null && event[key] !== '') {
-            fields.push({ key: label, value: String(event[key]) });
-          }
-        });
-
-        // Remaining non-__ fields, skipping @timestamp (shown via __formattedTimestamp)
-        const skipKeys = new Set([...priorityKeySet, '@timestamp', 'timestamp', 'UTCTimestamp', '#event_simpleName']);
-        Object.keys(event).forEach((k) => {
-          if (!k.startsWith('__') && !skipKeys.has(k)) {
-            fields.push({ key: k, value: String(event[k]) });
-          }
-        });
-
-        Ember.set(event, '__displayFields', fields);
-      });
-    });
-  },
-
-  _buildReadableJson(repoResults) {
-    (repoResults || []).forEach((repo) => {
-      (repo.events || []).forEach((event) => {
-        const clean = {};
-        Object.keys(event).forEach((k) => {
-          if (!k.startsWith('__')) {
-            clean[k] = event[k];
-          }
-        });
-        Ember.set(event, '__jsonHighlighted', this._syntaxHighlight(JSON.stringify(clean, null, 2)));
-      });
-    });
-  },
-
-  _syntaxHighlight(json) {
-    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return json.replace(
-      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-      function (match) {
-        var cls = 'csng-json-number';
-        if (/^"/.test(match)) {
-          cls = /:$/.test(match) ? 'csng-json-key' : 'csng-json-string';
-        } else if (/true|false/.test(match)) {
-          cls = 'csng-json-boolean';
-        } else if (/null/.test(match)) {
-          cls = 'csng-json-null';
-        }
-        return '<span class="' + cls + '">' + match + '</span>';
-      }
-    );
-  },
-
-  actions: {
-    toggleSection(section) {
-      const key = `block._state.show${section}`;
-      this.set(key, !this.get(key));
     },
 
-    toggleRepo(repoValue) {
-      const key = `block._state.selectedRepos.${repoValue}`;
-      this.set(key, !this.get(key));
+    // ── Create Case ─────────────────────────────────────────────────────
+    toggleCreateCase() {
+      this.set('block._state.showCreateCase', !this.get('block._state.showCreateCase'));
     },
 
-    runQuery() {
-      this.set('block._state.error', null);
+    setCaseType(type) {
+      this.set('block._state.caseType', type);
+    },
 
-      const selectedRepos = Object.entries(this.get('block._state.selectedRepos') || {})
-        .filter(([, checked]) => checked)
-        .map(([value]) => value);
+    resetCase() {
+      this.set('block._state.caseSuccess', null);
+      this.set('block._state.caseError', null);
+      const entityValue = (this.get('block.entity') || {}).value || '';
+      this.set('block._state.caseTitle', entityValue);
+      this.set('block._state.caseDescription', '');
+      this.set('block._state.caseType', 'incident');
+    },
 
-      if (!selectedRepos.length) {
-        this.set('block._state.error', 'Please select at least one repository.');
+    createCase() {
+      const title = (this.get('block._state.caseTitle') || '').trim();
+      const description = (this.get('block._state.caseDescription') || '').trim();
+      const type = this.get('block._state.caseType') || 'incident';
+
+      if (!title || !description) {
+        this.set('block._state.caseError', 'Title and description are required.');
         return;
       }
 
-      this.set('block._state.isQuerying', true);
+      this.set('block._state.caseLoading', true);
+      this.set('block._state.caseError', null);
+      this.set('block._state.caseSuccess', null);
 
       const entity = this.get('block.entity');
       this.sendIntegrationMessage({
-        action: 'RUN_QUERY',
-        data: { entityValue: entity.value, entityType: entity.type, selectedRepos }
+        action: 'CREATE_CASE',
+        data: { title, description, type, entityValue: entity.value }
       })
         .then((response) => {
-          this.set('block._state.isQuerying', false);
-          this.set('block.data.details.repoResults', response.repoResults);
-          if (response.deepLink) this.set('block.data.details.deepLink', response.deepLink);
-          if (response.query) this.set('block.data.details.query', response.query);
-          this._initEventTabs(response.repoResults);
-          this._buildReadableJson(response.repoResults);
+          this.set('block._state.caseLoading', false);
+          this.set('block._state.caseSuccess', response);
         })
         .catch((err) => {
-          this.set('block._state.isQuerying', false);
-          this.set('block._state.error', (err && err.detail) || 'Query failed. Please try again.');
+          this.set('block._state.caseLoading', false);
+          this.set('block._state.caseError', (err && err.detail) || 'Failed to create case.');
         });
     },
 
-    changeTab(tabName, repositoryValue, eventIndex) {
-      const results = this.get('repoResults') || [];
-      const repo = results.find((r) => r.repositoryValue === repositoryValue);
-      if (repo && repo.events && repo.events[eventIndex]) {
-        Ember.set(repo.events[eventIndex], '__activeTab', tabName);
+    // ── Annotate Incident ────────────────────────────────────────────────
+    toggleAnnotateIncident() {
+      this.set('block._state.showAnnotateIncident', !this.get('block._state.showAnnotateIncident'));
+    },
+
+    resetIncident() {
+      this.set('block._state.incidentSuccess', null);
+      this.set('block._state.incidentError', null);
+      this.set('block._state.incidentId', '');
+      this.set('block._state.incidentComment', '');
+    },
+
+    annotateIncident() {
+      const incidentId = (this.get('block._state.incidentId') || '').trim();
+      const comment = (this.get('block._state.incidentComment') || '').trim();
+
+      if (!incidentId || !comment) {
+        this.set('block._state.incidentError', 'Incident ID and comment are required.');
+        return;
       }
-    },
 
-    checkStatus(jobId, repositoryValue) {
+      this.set('block._state.incidentLoading', true);
+      this.set('block._state.incidentError', null);
+      this.set('block._state.incidentSuccess', null);
+
       this.sendIntegrationMessage({
-        action: 'CHECK_STATUS',
-        data: { jobId, repositoryValue }
+        action: 'ANNOTATE_INCIDENT',
+        data: { incidentId, comment }
       })
         .then((response) => {
-          const results = this.get('repoResults') || [];
-          const repo = results.find((r) => r.repositoryValue === repositoryValue);
-          if (repo && response.done) {
-            Ember.set(repo, 'done', true);
-            Ember.set(repo, 'events', response.events || []);
-            Ember.set(repo, 'jobId', null);
-            this._initEventTabs(results);
-            this._buildReadableJson(results);
-          }
+          this.set('block._state.incidentLoading', false);
+          this.set('block._state.incidentSuccess', response);
         })
         .catch((err) => {
-          this.set('block._state.error', (err && err.detail) || 'Status check failed.');
-        });
-    },
-
-    cancelQuery(jobId, repositoryValue) {
-      this.sendIntegrationMessage({
-        action: 'CANCEL_QUERY',
-        data: { jobId, repositoryValue }
-      })
-        .then(() => {
-          const results = this.get('repoResults') || [];
-          const repo = results.find((r) => r.repositoryValue === repositoryValue);
-          if (repo) {
-            Ember.set(repo, 'done', true);
-            Ember.set(repo, 'cancelled', true);
-            Ember.set(repo, 'events', []);
-          }
-        })
-        .catch((err) => {
-          this.set('block._state.error', (err && err.detail) || 'Cancel failed.');
+          this.set('block._state.incidentLoading', false);
+          this.set('block._state.incidentError', (err && err.detail) || 'Failed to annotate incident.');
         });
     }
   }

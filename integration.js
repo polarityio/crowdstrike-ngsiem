@@ -10,6 +10,8 @@ const { assembleLookupResults } = require('./server/assembleLookupResults');
 const { createQueryJob, pollQueryJob, cancelQueryJob } = require('./server/queries');
 const { createQueryString, createDeepLink, formatTimestamp } = require('./server/dataTransformations');
 const { request } = require('./server/request');
+const { createCase } = require('./server/createCase');
+const { annotateIncident } = require('./server/incidents');
 
 const doLookup = async (entities, options, cb) => {
   const Logger = getLogger();
@@ -78,6 +80,18 @@ const onMessage = async ({ action, data }, options, cb) => {
       const { jobId, repositoryValue } = data;
       await cancelQueryJob(jobId, repositoryValue);
       return cb(null, { cancelled: true, repositoryValue });
+    }
+
+    if (action === 'CREATE_CASE') {
+      const { title, description, type, entityValue } = data;
+      const result = await createCase(title || entityValue, description, type || 'incident', options);
+      return cb(null, result);
+    }
+
+    if (action === 'ANNOTATE_INCIDENT') {
+      const { incidentId, comment } = data;
+      const result = await annotateIncident(incidentId, comment, options);
+      return cb(null, result);
     }
 
     cb({ detail: `Unknown action: ${action}` });
