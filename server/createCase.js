@@ -23,7 +23,7 @@ const createCase = async (title, description, type, options) => {
 
   const response = await falconRequest.run({
     method: 'POST',
-    route: '/case/v1/cases',
+    route: '/message-center/entities/cases/v1',
     body: {
       title,
       body: description,
