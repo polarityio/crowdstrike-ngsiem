@@ -37,7 +37,8 @@ const getAccessToken = async (options) => {
         if (err) {
           return reject(new Error(`OAuth2 request failed: ${err.message}`));
         }
-        if (res.statusCode !== 200) {
+        // CrowdStrike returns 200 or 201 on success
+        if (res.statusCode !== 200 && res.statusCode !== 201) {
           return reject(
             new Error(
               `OAuth2 authentication failed (HTTP ${res.statusCode}): ${
