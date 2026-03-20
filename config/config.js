@@ -20,7 +20,7 @@ module.exports = {
     proxy: '',
     rejectUnauthorized: true
   },
-  logging: { level: 'info' },
+  logging: { level: 'debug' },
   options: [
     {
       key: 'clientId',

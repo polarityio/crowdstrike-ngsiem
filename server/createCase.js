@@ -25,7 +25,23 @@ const createCase = async (title, description, type, options) => {
   const token = await getAccessToken(options);
   const url = `${baseUrl}/cases/entities/cases/v2`;
 
-  Logger.debug({ url, title }, 'createCase: sending request');
+  const requestBody = {
+    name: title,
+    description: description || '',
+    status: 'new',
+    severity: 2
+  };
+
+  // Log token prefix only (never log full token)
+  Logger.debug(
+    {
+      url,
+      title,
+      tokenPrefix: token ? token.substring(0, 20) + '...' : 'MISSING',
+      body: requestBody
+    },
+    'createCase: sending request'
+  );
 
   return new Promise((resolve, reject) => {
     postmanRequest.put(
@@ -36,12 +52,7 @@ const createCase = async (title, description, type, options) => {
           'Content-Type': 'application/json',
           Accept: 'application/json'
         },
-        body: JSON.stringify({
-          name: title,
-          description: description || '',
-          status: 'new',
-          severity: 2
-        })
+        body: JSON.stringify(requestBody)
       },
       (err, res, rawBody) => {
         if (err) {
@@ -55,13 +66,20 @@ const createCase = async (title, description, type, options) => {
           body = rawBody;
         }
 
-        Logger.debug({ statusCode: res.statusCode, body }, 'createCase response');
+        Logger.debug({ statusCode: res.statusCode, body, url }, 'createCase response');
 
         if (res.statusCode < 200 || res.statusCode >= 300) {
-          const errMsg =
-            (body && body.errors && body.errors[0] && body.errors[0].message) ||
-            JSON.stringify(body);
-          return reject(new Error(`Case creation failed (HTTP ${res.statusCode}): ${errMsg}`));
+          const csErrors =
+            body && body.errors
+              ? body.errors.map((e) => `[${e.code}] ${e.message}`).join('; ')
+              : JSON.stringify(body);
+          Logger.error(
+            { statusCode: res.statusCode, url, body },
+            'createCase: CrowdStrike returned error'
+          );
+          return reject(
+            new Error(`Case creation failed (HTTP ${res.statusCode}): ${csErrors}`)
+          );
         }
 
         const caseData = body && body.resources && body.resources[0];
