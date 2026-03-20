@@ -19,7 +19,7 @@ const createCase = async (title, description, type, options) => {
   const Logger = getLogger();
   const baseUrl = (options.baseUrl || 'https://api.crowdstrike.com').replace(/\/$/, '');
   const token = await getAccessToken(options);
-  const url = `${baseUrl}/message-center/entities/cases/v1`;
+  const url = `${baseUrl}/message-center/entities/case/v2`;
 
   Logger.debug({ url, title, type }, 'createCase: sending request');
 
