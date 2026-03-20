@@ -1,6 +1,6 @@
 {
   "name": "crowdstrike-ngsiem",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "CrowdStrike Next-Gen SIEM integration for Polarity",
   "main": "integration.js",
   "scripts": {
