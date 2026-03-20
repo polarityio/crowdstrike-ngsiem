@@ -11,7 +11,7 @@
 </div>
 
 {{! ══════════════════════════════════════════════ }}
-{{! Query metadata                                }}
+{{! Query metadata + Run Query button             }}
 {{! ══════════════════════════════════════════════ }}
 <div>
   <span class="p-key">Query:</span>
@@ -22,50 +22,18 @@
   <span class="p-value">{{details.searchWindow}} &rarr; now</span>
 </div>
 
-{{! ══════════════════════════════════════════════ }}
-{{! Repository selector (collapsible)             }}
-{{! ══════════════════════════════════════════════ }}
-<div class="csng-section-toggle" {{action "toggleSection" "RepoSelector"}}>
-  <span class="p-title">
-    {{fa-icon "database" fixedWidth=true}} Repositories
-  </span>
-  <span class="csng-chevron">
-    {{#if block._state.showRepoSelector}}
-      {{fa-icon "chevron-up"}}
+<div class="csng-run-row">
+  <button
+    class="btn btn-xs btn-default csng-run-btn"
+    {{action "runQuery"}}
+  >
+    {{#if block._state.isQuerying}}
+      {{fa-icon "spinner" spin=true fixedWidth=true}} Querying...
     {{else}}
-      {{fa-icon "chevron-down"}}
+      {{fa-icon "search" fixedWidth=true}} Run Query
     {{/if}}
-  </span>
+  </button>
 </div>
-
-{{#if block._state.showRepoSelector}}
-  <div class="csng-repo-picker">
-    {{#each details.availableRepositories as |repo|}}
-      <div
-        class="csng-repo-toggle {{if (get block._state.selectedRepos repo.value) "csng-repo-active"}}"
-        {{action "toggleRepo" repo.value}}
-      >
-        {{#if (get block._state.selectedRepos repo.value)}}
-          {{fa-icon "check-square" fixedWidth=true}}
-        {{else}}
-          {{fa-icon "square" fixedWidth=true}}
-        {{/if}}
-        {{repo.label}}
-      </div>
-    {{/each}}
-
-    <button
-      class="btn btn-xs btn-default csng-run-btn"
-      {{action "runQuery"}}
-    >
-      {{#if block._state.isQuerying}}
-        {{fa-icon "spinner" spin=true fixedWidth=true}} Querying...
-      {{else}}
-        {{fa-icon "search" fixedWidth=true}} Run Query
-      {{/if}}
-    </button>
-  </div>
-{{/if}}
 
 {{! ══════════════════════════════════════════════ }}
 {{! Error state                                   }}
@@ -77,104 +45,119 @@
 {{/if}}
 
 {{! ══════════════════════════════════════════════ }}
-{{! Results — one section per repository          }}
+{{! Results — one collapsible section per repo    }}
 {{! ══════════════════════════════════════════════ }}
 {{#each details.repoResults as |repoResult|}}
   <div class="csng-repo-section">
 
-    {{! Repo header }}
-    <div class="csng-repo-header">
+    {{! Repo header — click to collapse/expand as a post-search filter }}
+    <div
+      class="csng-repo-header csng-repo-toggle"
+      {{action "toggleRepoVisibility" repoResult.repositoryValue}}
+    >
       <span class="p-title">
         {{fa-icon "server" fixedWidth=true}} {{repoResult.label}}
-      </span>
-      {{#if repoResult.done}}
-        {{#if repoResult.cancelled}}
-          <span class="csng-badge csng-badge-cancelled">Cancelled</span>
+        {{#if repoResult.done}}
+          {{#if repoResult.cancelled}}
+            <span class="csng-badge csng-badge-cancelled">Cancelled</span>
+          {{else}}
+            <span class="csng-event-count">({{repoResult.events.length}})</span>
+          {{/if}}
         {{else}}
-          <span class="csng-event-count">{{repoResult.events.length}} events</span>
+          <span class="csng-badge csng-badge-running">Running</span>
         {{/if}}
-      {{else}}
-        <span class="csng-badge csng-badge-running">Running</span>
-      {{/if}}
+      </span>
+      <span class="csng-chevron">
+        {{#if (get block._state.repoVisibility repoResult.repositoryValue)}}
+          {{fa-icon "chevron-up"}}
+        {{else}}
+          {{fa-icon "chevron-down"}}
+        {{/if}}
+      </span>
     </div>
 
-    {{! ── Pending state: Check Status + Cancel ── }}
-    {{#if (not repoResult.done)}}
-      <div class="csng-pending-controls">
-        <span class="csng-job-id">Job: {{repoResult.jobId}}</span>
-        <button
-          class="btn btn-xs btn-default csng-action-btn"
-          {{action "checkStatus" repoResult.jobId repoResult.repositoryValue}}
-        >
-          {{fa-icon "sync" fixedWidth=true}} Check Status
-        </button>
-        <button
-          class="btn btn-xs btn-danger csng-action-btn"
-          {{action "cancelQuery" repoResult.jobId repoResult.repositoryValue}}
-        >
-          {{fa-icon "times" fixedWidth=true}} Cancel
-        </button>
-      </div>
-    {{/if}}
+    {{#if (get block._state.repoVisibility repoResult.repositoryValue)}}
 
-    {{! ── Cancelled state ── }}
-    {{#if repoResult.cancelled}}
-      <div class="csng-no-events">Query was cancelled.</div>
-    {{/if}}
+      {{! ── Pending state: Check Status + Cancel ── }}
+      {{#if (not repoResult.done)}}
+        <div class="csng-pending-controls">
+          <span class="csng-job-id">Job: {{repoResult.jobId}}</span>
+          <button
+            class="btn btn-xs btn-default csng-action-btn"
+            {{action "checkStatus" repoResult.jobId repoResult.repositoryValue}}
+          >
+            {{fa-icon "sync" fixedWidth=true}} Check Status
+          </button>
+          <button
+            class="btn btn-xs btn-danger csng-action-btn"
+            {{action "cancelQuery" repoResult.jobId repoResult.repositoryValue}}
+          >
+            {{fa-icon "times" fixedWidth=true}} Cancel
+          </button>
+        </div>
+      {{/if}}
 
-    {{! ── Events list ── }}
-    {{#if repoResult.done}}
-      {{#if (not repoResult.cancelled)}}
-        {{#if repoResult.events.length}}
-          {{#each repoResult.events as |event eventIndex|}}
-            <div class="csng-event-card">
-              <div class="csng-event-num">
-                {{fa-icon "file-alt" fixedWidth=true}} Event {{eventIndex}}
+      {{! ── Cancelled state ── }}
+      {{#if repoResult.cancelled}}
+        <div class="csng-no-events">Query was cancelled.</div>
+      {{/if}}
+
+      {{! ── Events list ── }}
+      {{#if repoResult.done}}
+        {{#if (not repoResult.cancelled)}}
+          {{#if repoResult.events.length}}
+            {{#each repoResult.events as |event eventIndex|}}
+              <div class="csng-event-card">
+                <div class="csng-event-num">
+                  {{fa-icon "file-alt" fixedWidth=true}} Event {{eventIndex}}
+                </div>
+
+                {{! Tab nav }}
+                <ul class="nav nav-tabs csng-tabs">
+                  <li class="nav-item">
+                    <a
+                      href="#"
+                      class="nav-link {{if (eq event.__activeTab "fields") "active"}}"
+                      {{action "changeTab" "fields" repoResult.repositoryValue eventIndex}}
+                    >Fields</a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      href="#"
+                      class="nav-link {{if (eq event.__activeTab "json") "active"}}"
+                      {{action "changeTab" "json" repoResult.repositoryValue eventIndex}}
+                    >JSON</a>
+                  </li>
+                </ul>
+
+                {{! Fields tab }}
+                {{#if (eq event.__activeTab "fields")}}
+                  <div class="csng-fields-body">
+                    {{#each event.__displayFields as |field|}}
+                      <div>
+                        <span class="p-key">{{field.key}}:</span>
+                        <span class="p-value csng-field-value">{{field.value}}</span>
+                      </div>
+                    {{/each}}
+                  </div>
+                {{/if}}
+
+                {{! JSON tab }}
+                {{#if (eq event.__activeTab "json")}}
+                  <div class="csng-json-body">
+                    <pre class="csng-json-pre">{{{event.__jsonHighlighted}}}</pre>
+                  </div>
+                {{/if}}
               </div>
-
-              {{! Tab nav }}
-              <ul class="nav nav-tabs csng-tabs">
-                <li class="nav-item">
-                  <a
-                    href="#"
-                    class="nav-link {{if (eq event.__activeTab "fields") "active"}}"
-                    {{action "changeTab" "fields" repoResult.repositoryValue eventIndex}}
-                  >Fields</a>
-                </li>
-                <li class="nav-item">
-                  <a
-                    href="#"
-                    class="nav-link {{if (eq event.__activeTab "json") "active"}}"
-                    {{action "changeTab" "json" repoResult.repositoryValue eventIndex}}
-                  >JSON</a>
-                </li>
-              </ul>
-
-              {{! Fields tab }}
-              {{#if (eq event.__activeTab "fields")}}
-                <div class="csng-fields-body">
-                  {{#each event.__displayFields as |field|}}
-                    <div>
-                      <span class="p-key">{{field.key}}:</span>
-                      <span class="p-value csng-field-value">{{field.value}}</span>
-                    </div>
-                  {{/each}}
-                </div>
-              {{/if}}
-
-              {{! JSON tab }}
-              {{#if (eq event.__activeTab "json")}}
-                <div class="csng-json-body">
-                  <pre class="csng-json-pre">{{{event.__jsonHighlighted}}}</pre>
-                </div>
-              {{/if}}
-            </div>
-          {{/each}}
-        {{else}}
-          <div class="csng-no-events">No events found in this repository.</div>
+            {{/each}}
+          {{else}}
+            <div class="csng-no-events">No events found in this repository.</div>
+          {{/if}}
         {{/if}}
       {{/if}}
+
     {{/if}}
 
   </div>
 {{/each}}
+

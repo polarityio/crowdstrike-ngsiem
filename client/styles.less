@@ -29,6 +29,218 @@
   word-break: break-all;
 }
 
+// ── Run Query button row ───────────────────────────────────────────────────────
+.csng-run-row {
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+
+.csng-run-btn {
+  font-size: 11px;
+}
+
+// ── Error message ──────────────────────────────────────────────────────────────
+.csng-error {
+  margin-top: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #ff4d4f;
+  background: rgba(255, 77, 79, 0.08);
+  border-radius: 4px;
+  border-left: 3px solid #ff4d4f;
+}
+
+// ── Repository section ─────────────────────────────────────────────────────────
+.csng-repo-section {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+// Repo header doubles as a collapsible toggle (post-search filter)
+.csng-repo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+
+  .p-title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    margin: 0;
+  }
+
+  &.csng-repo-toggle {
+    cursor: pointer;
+    user-select: none;
+    &:hover { opacity: 0.8; }
+  }
+}
+
+.csng-chevron {
+  font-size: 11px;
+  color: #aaa;
+}
+
+.csng-event-count {
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+// ── Status badges ──────────────────────────────────────────────────────────────
+.csng-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 16px;
+}
+
+.csng-badge-running {
+  background: rgba(24, 144, 255, 0.15);
+  color: #1890ff;
+}
+
+.csng-badge-cancelled {
+  background: rgba(128, 128, 128, 0.15);
+  color: #888;
+}
+
+// ── Pending job controls ───────────────────────────────────────────────────────
+.csng-pending-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 6px;
+  flex-wrap: wrap;
+}
+
+.csng-job-id {
+  font-size: 10px;
+  font-family: 'Courier New', Courier, monospace;
+  opacity: 0.5;
+}
+
+.csng-action-btn {
+  font-size: 11px;
+}
+
+// ── No events placeholder ──────────────────────────────────────────────────────
+.csng-no-events {
+  font-size: 11px;
+  opacity: 0.5;
+  padding: 2px 0 4px;
+}
+
+// ── Event card ─────────────────────────────────────────────────────────────────
+.csng-event-card {
+  margin: 6px 0;
+  border: 1px solid rgba(128, 128, 128, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.csng-event-num {
+  font-size: 10px;
+  opacity: 0.45;
+  padding: 3px 6px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────────────────
+.csng-tabs {
+  margin: 0;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+
+  .nav-link {
+    font-size: 11px;
+    padding: 2px 10px;
+    cursor: pointer;
+    opacity: 0.55;
+    border: none;
+    border-bottom: 2px solid transparent;
+
+    &.active {
+      opacity: 1;
+      border-bottom-color: #1890ff;
+    }
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+}
+
+// ── Fields tab body ────────────────────────────────────────────────────────────
+.csng-fields-body {
+  padding: 4px 6px 6px;
+
+  .p-key {
+    font-size: 11px;
+  }
+}
+
+.csng-field-value {
+  word-break: break-all;
+  font-size: 11px;
+}
+
+// ── JSON tab body ──────────────────────────────────────────────────────────────
+.csng-json-body {
+  padding: 4px 6px;
+  overflow-x: auto;
+}
+
+.csng-json-pre {
+  font-size: 10px;
+  font-family: 'Courier New', Courier, monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+  opacity: 0.9;
+}
+
+// JSON syntax highlight spans
+.csng-json-key     { color: #5b9fe8; }
+.csng-json-string  { color: #7ec8a0; }
+.csng-json-number  { color: #d4a36b; }
+.csng-json-boolean { color: #c792ea; }
+.csng-json-null    { opacity: 0.4; }
+
+// Prefix: csng-
+// Theme rule: use opacity on inherited colors for non-semantic elements,
+// explicit colors only for semantic indicators (status, severity, links).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Deep link ─────────────────────────────────────────────────────────────────
+.csng-deep-link-row {
+  margin-bottom: 4px;
+}
+
+.csng-deep-link {
+  color: #1890ff;
+  font-size: 12px;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+    color: #40a9ff;
+  }
+}
+
+// ── Query metadata ─────────────────────────────────────────────────────────────
+.csng-query-mono {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  opacity: 0.8;
+  word-break: break-all;
+}
+
 // ── Section toggle (repo selector header) ─────────────────────────────────────
 .csng-section-toggle {
   display: flex;

@@ -46,13 +46,19 @@ const onMessage = async ({ action, data }, options, cb) => {
     request.userOptions = options;
 
     if (action === 'RUN_QUERY') {
-      const { entityValue, entityType, selectedRepos } = data;
+      const { entityValue, entityType } = data;
       const entity = { value: entityValue, type: entityType };
 
-      const result = await searchEntity(entity, selectedRepos, options);
+      // Always search all configured repos — user filters post-search by collapsing sections
+      const defaultRepos = (options.defaultRepositories || 'search-all')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const result = await searchEntity(entity, defaultRepos, options);
 
       const queryString = createQueryString(entity, options);
-      const firstRepo = (selectedRepos[0] || {}).repositoryValue || selectedRepos[0] || 'search-all';
+      const firstRepo = defaultRepos[0] || 'search-all';
       const deepLink = createDeepLink(entity, firstRepo, queryString, options);
 
       return cb(null, {
