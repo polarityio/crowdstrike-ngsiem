@@ -5,13 +5,17 @@ const { getAccessToken } = require('./auth');
 const { getLogger } = require('polarity-integration-utils').logging;
 
 /**
- * Creates a Falcon support case via the CrowdStrike Message Center API.
+ * Creates a Falcon investigation case via the CrowdStrike Cases API.
  *
- * Required API scope: Message Center: Write
+ * NOTE: This is NOT the Message Center (support ticket) API.
+ * This creates investigation cases within Falcon Next-Gen SIEM.
  *
- * @param {string} title       - Case title
- * @param {string} description - Case body / description
- * @param {string} type        - 'incident' or 'other'
+ * Required API scope: Cases: Write
+ * Endpoint: PUT /cases/entities/cases/v2
+ *
+ * @param {string} title       - Case name
+ * @param {string} description - Case description
+ * @param {string} type        - unused (kept for API compat — Falcon Cases uses severity/status instead)
  * @param {object} options     - Polarity user options
  * @returns {{ id, url }}
  */
@@ -19,12 +23,12 @@ const createCase = async (title, description, type, options) => {
   const Logger = getLogger();
   const baseUrl = (options.baseUrl || 'https://api.crowdstrike.com').replace(/\/$/, '');
   const token = await getAccessToken(options);
-  const url = `${baseUrl}/message-center/entities/case/v2`;
+  const url = `${baseUrl}/cases/entities/cases/v2`;
 
-  Logger.debug({ url, title, type }, 'createCase: sending request');
+  Logger.debug({ url, title }, 'createCase: sending request');
 
   return new Promise((resolve, reject) => {
-    postmanRequest.post(
+    postmanRequest.put(
       {
         url,
         headers: {
@@ -33,11 +37,10 @@ const createCase = async (title, description, type, options) => {
           Accept: 'application/json'
         },
         body: JSON.stringify({
-          title,
-          body: description,
-          type: type || 'incident',
-          detections: [],
-          incidents: []
+          name: title,
+          description: description || '',
+          status: 'new',
+          severity: 2
         })
       },
       (err, res, rawBody) => {
@@ -69,7 +72,7 @@ const createCase = async (title, description, type, options) => {
         const portalBase = baseUrl.replace('api.crowdstrike.com', 'falcon.crowdstrike.com');
         resolve({
           id: caseData.id,
-          url: `${portalBase}/support/cases/${caseData.id}`
+          url: `${portalBase}/investigations/cases/${caseData.id}`
         });
       }
     );
