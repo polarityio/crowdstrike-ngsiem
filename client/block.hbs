@@ -45,177 +45,11 @@
 {{/if}}
 
 {{! ══════════════════════════════════════════════ }}
-{{! Create Intelligence Case                      }}
-{{! ══════════════════════════════════════════════ }}
-<div class="csng-action-section">
-  <div class="csng-action-header" {{action "toggleCreateCase"}}>
-    <span class="p-title">
-      {{fa-icon "folder-plus" fixedWidth=true}} Create Intelligence Case
-    </span>
-    <span class="csng-chevron">
-      {{#if block._state.showCreateCase}}
-        {{fa-icon "chevron-up"}}
-      {{else}}
-        {{fa-icon "chevron-down"}}
-      {{/if}}
-    </span>
-  </div>
-
-  {{#if block._state.showCreateCase}}
-    <div class="csng-action-form">
-      {{#if block._state.caseSuccess}}
-        <div class="csng-success">
-          {{fa-icon "check-circle" fixedWidth=true}} Case created:
-          <a href="{{block._state.caseSuccess.url}}" class="csng-deep-link">
-            {{block._state.caseSuccess.id}}
-          </a>
-        </div>
-        <div class="csng-form-reset-row">
-          <button class="btn btn-xs btn-default" {{action "resetCase"}}>
-            {{fa-icon "plus" fixedWidth=true}} Create Another
-          </button>
-        </div>
-      {{else}}
-        {{#if block._state.caseError}}
-          <div class="csng-error csng-form-error">
-            {{fa-icon "exclamation-triangle" fixedWidth=true}} {{block._state.caseError}}
-          </div>
-        {{/if}}
-
-        <div class="csng-form-group">
-          <label class="csng-form-label">Title</label>
-          {{input
-            value=block._state.caseTitle
-            class="form-control csng-form-input"
-            placeholder="Case title"
-          }}
-        </div>
-
-        <div class="csng-form-group">
-          <label class="csng-form-label">Description</label>
-          {{textarea
-            value=block._state.caseDescription
-            class="form-control csng-form-textarea"
-            placeholder="Context, IOCs, or investigation notes..."
-            rows=3
-          }}
-        </div>
-
-        <div class="csng-form-group">
-          <label class="csng-form-label">Type</label>
-          <div class="csng-type-toggle">
-            <button
-              class="btn btn-xs {{if (eq block._state.caseType "incident") "btn-primary" "btn-default"}} csng-type-btn"
-              {{action "setCaseType" "incident"}}
-            >Incident Investigation</button>
-            <button
-              class="btn btn-xs {{if (eq block._state.caseType "other") "btn-primary" "btn-default"}} csng-type-btn"
-              {{action "setCaseType" "other"}}
-            >Other</button>
-          </div>
-        </div>
-
-        <button
-          class="btn btn-xs btn-primary csng-form-submit"
-          {{action "createCase"}}
-          disabled={{block._state.caseLoading}}
-        >
-          {{#if block._state.caseLoading}}
-            {{fa-icon "spinner" spin=true fixedWidth=true}} Creating...
-          {{else}}
-            {{fa-icon "folder-plus" fixedWidth=true}} Create Case
-          {{/if}}
-        </button>
-
-        <div class="csng-scope-hint">
-          {{fa-icon "info-circle" fixedWidth=true}} Requires <strong>Cases: Write</strong> scope on your API client.
-        </div>
-      {{/if}}
-    </div>
-  {{/if}}
-</div>
-
-{{! ══════════════════════════════════════════════ }}
-{{! Annotate Incident                             }}
-{{! ══════════════════════════════════════════════ }}
-<div class="csng-action-section">
-  <div class="csng-action-header" {{action "toggleAnnotateIncident"}}>
-    <span class="p-title">
-      {{fa-icon "edit" fixedWidth=true}} Annotate Incident
-    </span>
-    <span class="csng-chevron">
-      {{#if block._state.showAnnotateIncident}}
-        {{fa-icon "chevron-up"}}
-      {{else}}
-        {{fa-icon "chevron-down"}}
-      {{/if}}
-    </span>
-  </div>
-
-  {{#if block._state.showAnnotateIncident}}
-    <div class="csng-action-form">
-      {{#if block._state.incidentSuccess}}
-        <div class="csng-success">
-          {{fa-icon "check-circle" fixedWidth=true}} Annotation added to <strong>{{block._state.incidentSuccess.incidentId}}</strong>.
-        </div>
-        <div class="csng-form-reset-row">
-          <button class="btn btn-xs btn-default" {{action "resetIncident"}}>
-            {{fa-icon "plus" fixedWidth=true}} Annotate Another
-          </button>
-        </div>
-      {{else}}
-        {{#if block._state.incidentError}}
-          <div class="csng-error csng-form-error">
-            {{fa-icon "exclamation-triangle" fixedWidth=true}} {{block._state.incidentError}}
-          </div>
-        {{/if}}
-
-        <div class="csng-form-group">
-          <label class="csng-form-label">Incident ID</label>
-          {{input
-            value=block._state.incidentId
-            class="form-control csng-form-input"
-            placeholder="inc:abc123..."
-          }}
-        </div>
-
-        <div class="csng-form-group">
-          <label class="csng-form-label">Comment / Note</label>
-          {{textarea
-            value=block._state.incidentComment
-            class="form-control csng-form-textarea"
-            placeholder="Add your annotation or investigation note..."
-            rows=3
-          }}
-        </div>
-
-        <button
-          class="btn btn-xs btn-default csng-form-submit"
-          {{action "annotateIncident"}}
-          disabled={{block._state.incidentLoading}}
-        >
-          {{#if block._state.incidentLoading}}
-            {{fa-icon "spinner" spin=true fixedWidth=true}} Submitting...
-          {{else}}
-            {{fa-icon "edit" fixedWidth=true}} Add Annotation
-          {{/if}}
-        </button>
-
-        <div class="csng-scope-hint">
-          {{fa-icon "info-circle" fixedWidth=true}} Requires <strong>Incidents: Write</strong> scope on your API client.
-        </div>
-      {{/if}}
-    </div>
-  {{/if}}
-</div>
-
-{{! ══════════════════════════════════════════════ }}
 {{! Results — one collapsible section per repo    }}
 {{! ══════════════════════════════════════════════ }}
 {{#each details.repoResults as |repoResult|}}
   <div class="csng-repo-section">
 
-    {{! Repo header — click to collapse/expand as a post-search filter }}
     <div
       class="csng-repo-header csng-repo-toggle"
       {{action "toggleRepoVisibility" repoResult.repositoryValue}}
@@ -243,7 +77,6 @@
 
     {{#if (get block._state.repoVisibility repoResult.repositoryValue)}}
 
-      {{! ── Pending state: Check Status + Cancel ── }}
       {{#if (not repoResult.done)}}
         <div class="csng-pending-controls">
           <span class="csng-job-id">Job: {{repoResult.jobId}}</span>
@@ -262,12 +95,10 @@
         </div>
       {{/if}}
 
-      {{! ── Cancelled state ── }}
       {{#if repoResult.cancelled}}
         <div class="csng-no-events">Query was cancelled.</div>
       {{/if}}
 
-      {{! ── Events list ── }}
       {{#if repoResult.done}}
         {{#if (not repoResult.cancelled)}}
           {{#if repoResult.events.length}}
@@ -277,7 +108,6 @@
                   {{fa-icon "file-alt" fixedWidth=true}} Event {{eventIndex}}
                 </div>
 
-                {{! Tab nav }}
                 <ul class="nav nav-tabs csng-tabs">
                   <li class="nav-item">
                     <a
@@ -295,7 +125,6 @@
                   </li>
                 </ul>
 
-                {{! Fields tab }}
                 {{#if (eq event.__activeTab "fields")}}
                   <div class="csng-fields-body">
                     {{#each event.__displayFields as |field|}}
@@ -307,7 +136,6 @@
                   </div>
                 {{/if}}
 
-                {{! JSON tab }}
                 {{#if (eq event.__activeTab "json")}}
                   <div class="csng-json-body">
                     <pre class="csng-json-pre">{{{event.__jsonHighlighted}}}</pre>
@@ -325,3 +153,295 @@
 
   </div>
 {{/each}}
+
+{{! ══════════════════════════════════════════════════════════════════════════ }}
+{{! Cases — collapsible; auto-searches on first expand                        }}
+{{! ══════════════════════════════════════════════════════════════════════════ }}
+<div class="csng-panel-section">
+  <div class="csng-panel-header" {{action "toggleCases"}}>
+    <span class="p-title">
+      {{fa-icon "folder-open" fixedWidth=true}} Cases
+      {{#if block._state.casesLoaded}}
+        <span class="csng-section-count">({{block._state.casesResults.length}})</span>
+      {{/if}}
+    </span>
+    <span class="csng-panel-right">
+      {{#if block._state.casesLoaded}}
+        <span class="csng-refresh-btn" {{action "refreshCases"}}>
+          {{fa-icon "sync-alt" fixedWidth=true}}
+        </span>
+      {{/if}}
+      <span class="csng-chevron">
+        {{#if block._state.showCases}}
+          {{fa-icon "chevron-up"}}
+        {{else}}
+          {{fa-icon "chevron-down"}}
+        {{/if}}
+      </span>
+    </span>
+  </div>
+
+  {{#if block._state.showCases}}
+    <div class="csng-panel-body">
+
+      {{! Loading }}
+      {{#if block._state.casesLoading}}
+        <div class="csng-loading">
+          {{fa-icon "spinner" spin=true fixedWidth=true}} Searching for related cases...
+        </div>
+      {{/if}}
+
+      {{! Error }}
+      {{#if block._state.casesError}}
+        <div class="csng-error">
+          {{fa-icon "exclamation-triangle" fixedWidth=true}} {{block._state.casesError}}
+        </div>
+      {{/if}}
+
+      {{! Cases list }}
+      {{#if block._state.casesLoaded}}
+        {{#if block._state.casesResults.length}}
+          {{#each block._state.casesResults as |c|}}
+            <div class="csng-item-card">
+              <div class="csng-item-title-row">
+                <span class="csng-item-title">{{fa-icon "folder" fixedWidth=true}} {{c.name}}</span>
+                <a href="{{c.deepLink}}" class="csng-ext-icon csng-deep-link">
+                  {{fa-icon "external-link-alt" fixedWidth=true}}
+                </a>
+              </div>
+              <div class="csng-item-meta">
+                <span class="p-key">Status:</span>
+                <span class="p-value">{{c.status}}</span>
+                <span class="csng-bullet">&bull;</span>
+                <span class="p-key">Severity:</span>
+                <span class="p-value">{{c.severity}}</span>
+                {{#if c.createdAt}}
+                  <span class="csng-bullet">&bull;</span>
+                  <span class="csng-secondary">{{c.createdAt}}</span>
+                {{/if}}
+              </div>
+              {{#if c.description}}
+                <div class="csng-item-desc">{{c.description}}</div>
+              {{/if}}
+            </div>
+          {{/each}}
+        {{else}}
+          {{#if (not block._state.casesLoading)}}
+            <div class="csng-no-events">No cases found matching this indicator.</div>
+          {{/if}}
+        {{/if}}
+      {{/if}}
+
+      {{! ── Create New Case sub-section ── }}
+      <div class="csng-create-toggle" {{action "toggleCreateCase"}}>
+        <span class="p-title">
+          {{fa-icon "plus-circle" fixedWidth=true}} Create New Case
+        </span>
+        <span class="csng-chevron">
+          {{#if block._state.showCreateCase}}
+            {{fa-icon "chevron-up"}}
+          {{else}}
+            {{fa-icon "chevron-down"}}
+          {{/if}}
+        </span>
+      </div>
+
+      {{#if block._state.showCreateCase}}
+        {{#if block._state.caseSuccess}}
+          <div class="csng-success">
+            {{fa-icon "check-circle" fixedWidth=true}} Case created:
+            <a href="{{block._state.caseSuccess.url}}" class="csng-deep-link">
+              {{block._state.caseSuccess.id}}
+            </a>
+          </div>
+          <div class="csng-form-reset-row">
+            <button class="btn btn-xs btn-default" {{action "resetCase"}}>
+              {{fa-icon "plus" fixedWidth=true}} Create Another
+            </button>
+          </div>
+        {{else}}
+          {{#if block._state.caseError}}
+            <div class="csng-error csng-form-error">
+              {{fa-icon "exclamation-triangle" fixedWidth=true}} {{block._state.caseError}}
+            </div>
+          {{/if}}
+
+          <div class="csng-form-group">
+            <label class="csng-form-label">Title</label>
+            {{input
+              value=block._state.caseTitle
+              class="form-control csng-form-input"
+              placeholder="Case title"
+            }}
+          </div>
+
+          <div class="csng-form-group">
+            <label class="csng-form-label">Description</label>
+            {{textarea
+              value=block._state.caseDescription
+              class="form-control csng-form-textarea"
+              placeholder="Context, IOCs, or investigation notes..."
+              rows=3
+            }}
+          </div>
+
+          <button
+            class="btn btn-xs btn-primary csng-form-submit"
+            {{action "createCase"}}
+            disabled={{block._state.caseLoading}}
+          >
+            {{#if block._state.caseLoading}}
+              {{fa-icon "spinner" spin=true fixedWidth=true}} Creating...
+            {{else}}
+              {{fa-icon "folder-plus" fixedWidth=true}} Create Case
+            {{/if}}
+          </button>
+
+          <div class="csng-scope-hint">
+            {{fa-icon "info-circle" fixedWidth=true}} Requires <strong>Cases: Write</strong> scope.
+          </div>
+        {{/if}}
+      {{/if}}
+
+    </div>
+  {{/if}}
+</div>
+
+{{! ══════════════════════════════════════════════════════════════════════════ }}
+{{! Incidents — collapsible; auto-searches on first expand                    }}
+{{! Click any incident row to expand its annotation form                      }}
+{{! ══════════════════════════════════════════════════════════════════════════ }}
+<div class="csng-panel-section">
+  <div class="csng-panel-header" {{action "toggleIncidents"}}>
+    <span class="p-title">
+      {{fa-icon "exclamation-circle" fixedWidth=true}} Incidents
+      {{#if block._state.incidentsLoaded}}
+        <span class="csng-section-count">({{block._state.incidentsResults.length}})</span>
+      {{/if}}
+    </span>
+    <span class="csng-panel-right">
+      {{#if block._state.incidentsLoaded}}
+        <span class="csng-refresh-btn" {{action "refreshIncidents"}}>
+          {{fa-icon "sync-alt" fixedWidth=true}}
+        </span>
+      {{/if}}
+      <span class="csng-chevron">
+        {{#if block._state.showIncidents}}
+          {{fa-icon "chevron-up"}}
+        {{else}}
+          {{fa-icon "chevron-down"}}
+        {{/if}}
+      </span>
+    </span>
+  </div>
+
+  {{#if block._state.showIncidents}}
+    <div class="csng-panel-body">
+
+      {{! Loading }}
+      {{#if block._state.incidentsLoading}}
+        <div class="csng-loading">
+          {{fa-icon "spinner" spin=true fixedWidth=true}} Searching for related incidents...
+        </div>
+      {{/if}}
+
+      {{! Error }}
+      {{#if block._state.incidentsError}}
+        <div class="csng-error">
+          {{fa-icon "exclamation-triangle" fixedWidth=true}} {{block._state.incidentsError}}
+        </div>
+      {{/if}}
+
+      {{! Incidents list }}
+      {{#if block._state.incidentsLoaded}}
+        {{#if block._state.incidentsResults.length}}
+          {{#each block._state.incidentsResults as |inc|}}
+            <div class="csng-item-card">
+
+              {{! Clickable name row — expands inline annotation form }}
+              <div class="csng-incident-name-row" {{action "toggleIncidentAnnotate" inc.incidentId}}>
+                <span class="csng-item-title">
+                  {{fa-icon "shield-alt" fixedWidth=true}} {{inc.name}}
+                </span>
+                <span class="csng-incident-right">
+                  <span class="csng-chevron">
+                    {{#if (eq block._state.expandedIncidentId inc.incidentId)}}
+                      {{fa-icon "chevron-up"}}
+                    {{else}}
+                      {{fa-icon "chevron-down"}}
+                    {{/if}}
+                  </span>
+                </span>
+              </div>
+
+              {{! Metadata row (not part of toggle) }}
+              <div class="csng-item-meta">
+                <span class="p-key">Status:</span>
+                <span class="p-value">{{inc.status}}</span>
+                <span class="csng-bullet">&bull;</span>
+                <span class="p-key">Sev:</span>
+                <span class="p-value">{{inc.severity}}</span>
+                {{#if inc.start}}
+                  <span class="csng-bullet">&bull;</span>
+                  <span class="csng-secondary">{{inc.start}}</span>
+                {{/if}}
+                <a href="{{inc.deepLink}}" class="csng-ext-icon csng-deep-link">
+                  {{fa-icon "external-link-alt" fixedWidth=true}}
+                </a>
+              </div>
+
+              {{! Inline annotation form — shown when this incident is expanded }}
+              {{#if (eq block._state.expandedIncidentId inc.incidentId)}}
+                <div class="csng-annotate-form">
+                  {{#if (eq block._state.incidentSuccess inc.incidentId)}}
+                    <div class="csng-success">
+                      {{fa-icon "check-circle" fixedWidth=true}} Annotation added successfully.
+                    </div>
+                  {{else}}
+                    {{#if block._state.incidentError}}
+                      <div class="csng-error csng-form-error">
+                        {{fa-icon "exclamation-triangle" fixedWidth=true}} {{block._state.incidentError}}
+                      </div>
+                    {{/if}}
+
+                    <div class="csng-form-group">
+                      <label class="csng-form-label">Add Comment / Note</label>
+                      {{textarea
+                        value=block._state.incidentComment
+                        class="form-control csng-form-textarea"
+                        placeholder="Add your annotation or investigation note..."
+                        rows=2
+                      }}
+                    </div>
+
+                    <button
+                      class="btn btn-xs btn-default csng-form-submit"
+                      {{action "annotateIncident" inc.incidentId}}
+                      disabled={{block._state.incidentLoading}}
+                    >
+                      {{#if block._state.incidentLoading}}
+                        {{fa-icon "spinner" spin=true fixedWidth=true}} Submitting...
+                      {{else}}
+                        {{fa-icon "edit" fixedWidth=true}} Add Annotation
+                      {{/if}}
+                    </button>
+                  {{/if}}
+                </div>
+              {{/if}}
+
+            </div>
+          {{/each}}
+        {{else}}
+          {{#if (not block._state.incidentsLoading)}}
+            <div class="csng-no-events">No incidents found matching this indicator.</div>
+          {{/if}}
+        {{/if}}
+      {{/if}}
+
+      <div class="csng-scope-hint">
+        {{fa-icon "info-circle" fixedWidth=true}} Requires <strong>Incidents: Read &amp; Write</strong> scope.
+      </div>
+
+    </div>
+  {{/if}}
+</div>

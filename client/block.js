@@ -20,22 +20,39 @@ polarity.export = PolarityComponent.extend({
       });
       const entityValue = (this.get('block.entity') || {}).value || '';
       this.set('block._state', {
+        // Query
         isQuerying: false,
         error: null,
         repoVisibility: repoVisibility,
+
+        // Cases panel
+        showCases: false,
+        casesLoading: false,
+        casesLoaded: false,
+        casesError: null,
+        casesResults: [],
+
+        // Create new case form (nested inside Cases panel)
         showCreateCase: false,
         caseTitle: entityValue,
         caseDescription: '',
-        caseType: 'incident',
         caseLoading: false,
         caseError: null,
         caseSuccess: null,
-        showAnnotateIncident: false,
-        incidentId: '',
+
+        // Incidents panel
+        showIncidents: false,
+        incidentsLoading: false,
+        incidentsLoaded: false,
+        incidentsError: null,
+        incidentsResults: [],
+
+        // Inline annotation form (one at a time — tracks which incident is expanded)
+        expandedIncidentId: null,
         incidentComment: '',
         incidentLoading: false,
         incidentError: null,
-        incidentSuccess: null
+        incidentSuccess: null   // stores incidentId string on success
       });
     }
     this._initEventTabs(this.get('repoResults') || []);
@@ -208,12 +225,57 @@ polarity.export = PolarityComponent.extend({
         });
     },
 
-    toggleCreateCase: function () {
-      this.set('block._state.showCreateCase', !this.get('block._state.showCreateCase'));
+    // ── Cases panel ─────────────────────────────────────────────────────────
+
+    toggleCases: function () {
+      const nowOpen = !this.get('block._state.showCases');
+      this.set('block._state.showCases', nowOpen);
+
+      // Lazy-load: search only on first expand
+      if (nowOpen && !this.get('block._state.casesLoaded') && !this.get('block._state.casesLoading')) {
+        this.set('block._state.casesLoading', true);
+        this.set('block._state.casesError', null);
+
+        const entity = this.get('block.entity');
+        this.sendIntegrationMessage({
+          action: 'SEARCH_CASES',
+          data: { entityValue: entity.value }
+        })
+          .then((response) => {
+            this.set('block._state.casesLoading', false);
+            this.set('block._state.casesLoaded', true);
+            this.set('block._state.casesResults', response.cases || []);
+          })
+          .catch((err) => {
+            this.set('block._state.casesLoading', false);
+            this.set('block._state.casesError', (err && err.detail) || 'Failed to search cases.');
+          });
+      }
     },
 
-    setCaseType: function (type) {
-      this.set('block._state.caseType', type);
+    refreshCases: function () {
+      this.set('block._state.casesLoading', true);
+      this.set('block._state.casesLoaded', false);
+      this.set('block._state.casesError', null);
+
+      const entity = this.get('block.entity');
+      this.sendIntegrationMessage({
+        action: 'SEARCH_CASES',
+        data: { entityValue: entity.value }
+      })
+        .then((response) => {
+          this.set('block._state.casesLoading', false);
+          this.set('block._state.casesLoaded', true);
+          this.set('block._state.casesResults', response.cases || []);
+        })
+        .catch((err) => {
+          this.set('block._state.casesLoading', false);
+          this.set('block._state.casesError', (err && err.detail) || 'Failed to search cases.');
+        });
+    },
+
+    toggleCreateCase: function () {
+      this.set('block._state.showCreateCase', !this.get('block._state.showCreateCase'));
     },
 
     resetCase: function () {
@@ -222,13 +284,11 @@ polarity.export = PolarityComponent.extend({
       const entityValue = (this.get('block.entity') || {}).value || '';
       this.set('block._state.caseTitle', entityValue);
       this.set('block._state.caseDescription', '');
-      this.set('block._state.caseType', 'incident');
     },
 
     createCase: function () {
       const title = (this.get('block._state.caseTitle') || '').trim();
       const description = (this.get('block._state.caseDescription') || '').trim();
-      const type = this.get('block._state.caseType') || 'incident';
 
       if (!title || !description) {
         this.set('block._state.caseError', 'Title and description are required.');
@@ -242,11 +302,13 @@ polarity.export = PolarityComponent.extend({
       const entity = this.get('block.entity');
       this.sendIntegrationMessage({
         action: 'CREATE_CASE',
-        data: { title: title, description: description, type: type, entityValue: entity.value }
+        data: { title: title, description: description, type: 'incident', entityValue: entity.value }
       })
         .then((response) => {
           this.set('block._state.caseLoading', false);
           this.set('block._state.caseSuccess', response);
+          // Invalidate cache so next expand refreshes the list
+          this.set('block._state.casesLoaded', false);
         })
         .catch((err) => {
           this.set('block._state.caseLoading', false);
@@ -254,23 +316,74 @@ polarity.export = PolarityComponent.extend({
         });
     },
 
-    toggleAnnotateIncident: function () {
-      this.set('block._state.showAnnotateIncident', !this.get('block._state.showAnnotateIncident'));
+    // ── Incidents panel ──────────────────────────────────────────────────────
+
+    toggleIncidents: function () {
+      const nowOpen = !this.get('block._state.showIncidents');
+      this.set('block._state.showIncidents', nowOpen);
+
+      // Lazy-load: search only on first expand
+      if (nowOpen && !this.get('block._state.incidentsLoaded') && !this.get('block._state.incidentsLoading')) {
+        this.set('block._state.incidentsLoading', true);
+        this.set('block._state.incidentsError', null);
+
+        const entity = this.get('block.entity');
+        this.sendIntegrationMessage({
+          action: 'SEARCH_INCIDENTS',
+          data: { entityValue: entity.value }
+        })
+          .then((response) => {
+            this.set('block._state.incidentsLoading', false);
+            this.set('block._state.incidentsLoaded', true);
+            this.set('block._state.incidentsResults', response.incidents || []);
+          })
+          .catch((err) => {
+            this.set('block._state.incidentsLoading', false);
+            this.set('block._state.incidentsError', (err && err.detail) || 'Failed to search incidents.');
+          });
+      }
     },
 
-    resetIncident: function () {
-      this.set('block._state.incidentSuccess', null);
-      this.set('block._state.incidentError', null);
-      this.set('block._state.incidentId', '');
-      this.set('block._state.incidentComment', '');
+    refreshIncidents: function () {
+      this.set('block._state.incidentsLoading', true);
+      this.set('block._state.incidentsLoaded', false);
+      this.set('block._state.incidentsError', null);
+      this.set('block._state.expandedIncidentId', null);
+
+      const entity = this.get('block.entity');
+      this.sendIntegrationMessage({
+        action: 'SEARCH_INCIDENTS',
+        data: { entityValue: entity.value }
+      })
+        .then((response) => {
+          this.set('block._state.incidentsLoading', false);
+          this.set('block._state.incidentsLoaded', true);
+          this.set('block._state.incidentsResults', response.incidents || []);
+        })
+        .catch((err) => {
+          this.set('block._state.incidentsLoading', false);
+          this.set('block._state.incidentsError', (err && err.detail) || 'Failed to search incidents.');
+        });
     },
 
-    annotateIncident: function () {
-      const incidentId = (this.get('block._state.incidentId') || '').trim();
+    toggleIncidentAnnotate: function (incidentId) {
+      const current = this.get('block._state.expandedIncidentId');
+      if (current === incidentId) {
+        this.set('block._state.expandedIncidentId', null);
+      } else {
+        this.set('block._state.expandedIncidentId', incidentId);
+        // Reset form state when switching incidents
+        this.set('block._state.incidentComment', '');
+        this.set('block._state.incidentError', null);
+        this.set('block._state.incidentSuccess', null);
+      }
+    },
+
+    annotateIncident: function (incidentId) {
       const comment = (this.get('block._state.incidentComment') || '').trim();
 
-      if (!incidentId || !comment) {
-        this.set('block._state.incidentError', 'Incident ID and comment are required.');
+      if (!comment) {
+        this.set('block._state.incidentError', 'Please enter a comment or note.');
         return;
       }
 
@@ -282,9 +395,9 @@ polarity.export = PolarityComponent.extend({
         action: 'ANNOTATE_INCIDENT',
         data: { incidentId: incidentId, comment: comment }
       })
-        .then((response) => {
+        .then(() => {
           this.set('block._state.incidentLoading', false);
-          this.set('block._state.incidentSuccess', response);
+          this.set('block._state.incidentSuccess', incidentId);
         })
         .catch((err) => {
           this.set('block._state.incidentLoading', false);

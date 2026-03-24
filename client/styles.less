@@ -60,20 +60,27 @@
   margin-bottom: 6px;
 }
 
-// ── Action sections (Create Case / Annotate Incident) ──────────────────────────
+// ── Action sections (legacy alias — keep for backward compat) ──────────────────
 .csng-action-section {
   margin-top: 8px;
   padding-top: 6px;
   border-top: 1px solid rgba(128, 128, 128, 0.2);
 }
 
-.csng-action-header {
+// ── Panel section — Cases / Incidents ─────────────────────────────────────────
+.csng-panel-section {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.csng-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
   user-select: none;
-  margin-bottom: 4px;
+  padding: 2px 0;
 
   &:hover { opacity: 0.8; }
 
@@ -86,8 +93,144 @@
   }
 }
 
-.csng-action-form {
+.csng-panel-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.csng-panel-body {
   padding: 4px 0 6px 2px;
+}
+
+// ── Section count badge ────────────────────────────────────────────────────────
+.csng-section-count {
+  font-size: 10px;
+  opacity: 0.5;
+  font-weight: normal;
+}
+
+// ── Inline refresh icon ────────────────────────────────────────────────────────
+.csng-refresh-btn {
+  font-size: 10px;
+  opacity: 0.45;
+  cursor: pointer;
+
+  &:hover { opacity: 0.8; }
+}
+
+// ── Loading placeholder ────────────────────────────────────────────────────────
+.csng-loading {
+  font-size: 11px;
+  opacity: 0.55;
+  padding: 2px 0 6px;
+}
+
+// ── Item card (Case or Incident) ───────────────────────────────────────────────
+.csng-item-card {
+  margin: 5px 0;
+  padding: 6px 8px;
+  border: 1px solid rgba(128, 128, 128, 0.15);
+  border-radius: 4px;
+}
+
+.csng-item-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.csng-item-title {
+  font-size: 11px;
+  font-weight: 600;
+  flex: 1;
+  word-break: break-word;
+}
+
+.csng-item-meta {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-bottom: 2px;
+}
+
+.csng-item-desc {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 3px;
+  word-break: break-word;
+}
+
+// ── Incident name row (clickable toggle) ───────────────────────────────────────
+.csng-incident-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 3px;
+
+  &:hover { opacity: 0.8; }
+}
+
+.csng-incident-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+// ── Inline annotation form ─────────────────────────────────────────────────────
+.csng-annotate-form {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(128, 128, 128, 0.2);
+}
+
+// ── Create New Case sub-toggle ─────────────────────────────────────────────────
+.csng-create-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(128, 128, 128, 0.15);
+
+  &:hover { opacity: 0.8; }
+
+  .p-title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    margin: 0;
+    opacity: 0.75;
+  }
+}
+
+// ── Misc helpers ───────────────────────────────────────────────────────────────
+.csng-secondary {
+  opacity: 0.5;
+  font-size: 10px;
+}
+
+.csng-bullet {
+  opacity: 0.3;
+  margin: 0 1px;
+}
+
+.csng-ext-icon {
+  font-size: 11px;
+  opacity: 0.55;
+  flex-shrink: 0;
+
+  &:hover { opacity: 1; }
 }
 
 // ── Form elements ──────────────────────────────────────────────────────────────
@@ -128,16 +271,6 @@
 
 .csng-form-reset-row {
   margin-top: 6px;
-}
-
-// ── Type toggle buttons ────────────────────────────────────────────────────────
-.csng-type-toggle {
-  display: flex;
-  gap: 4px;
-}
-
-.csng-type-btn {
-  font-size: 11px;
 }
 
 // ── Scope hint ─────────────────────────────────────────────────────────────────

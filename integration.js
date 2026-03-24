@@ -12,6 +12,8 @@ const { createQueryString, createDeepLink, formatTimestamp } = require('./server
 const { request } = require('./server/request');
 const { createCase } = require('./server/createCase');
 const { annotateIncident } = require('./server/incidents');
+const { searchCases } = require('./server/searchCases');
+const { searchIncidents } = require('./server/searchIncidents');
 
 const doLookup = async (entities, options, cb) => {
   const Logger = getLogger();
@@ -92,6 +94,18 @@ const onMessage = async ({ action, data }, options, cb) => {
       const { incidentId, comment } = data;
       const result = await annotateIncident(incidentId, comment, options);
       return cb(null, result);
+    }
+
+    if (action === 'SEARCH_CASES') {
+      const { entityValue } = data;
+      const cases = await searchCases(entityValue, options);
+      return cb(null, { cases });
+    }
+
+    if (action === 'SEARCH_INCIDENTS') {
+      const { entityValue } = data;
+      const incidents = await searchIncidents(entityValue, options);
+      return cb(null, { incidents });
     }
 
     cb({ detail: `Unknown action: ${action}` });
